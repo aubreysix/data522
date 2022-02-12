@@ -1,0 +1,47 @@
+-- p\copy titanic_rawdata_train from 'file/path/train.csv'
+create table titanic_rawdata_train (
+	PassengerId serial PRIMARY KEY,
+	Survived INTEGER NOT NULL,
+	Pclass INTEGER,
+	Name VARCHAR,
+	Sex VARCHAR,
+	Age NUMERIC,
+	SibSp INTEGER,
+	Parch INTEGER,
+	Ticket VARCHAR,
+	Fare NUMERIC,
+	Cabin VARCHAR,
+	Embarked VARCHAR
+);
+
+-- \copy titanic_rawdata_test from 'file/path/test.csv' 
+create table titanic_rawdata_test (
+	PassengerId serial PRIMARY KEY,
+	Pclass INTEGER,
+	Name VARCHAR,
+	Sex VARCHAR,
+	Age NUMERIC,
+	SibSp INTEGER,
+	Parch INTEGER,
+	Ticket VARCHAR,
+	Fare NUMERIC,
+	Cabin VARCHAR,
+	Embarked VARCHAR
+);
+
+-- create raw table includes both test and train data
+create table titanic_cb_rawdata as
+(
+	select
+	  'train' as cohort,
+	  t1.*
+	from titanic_rawdata_train t1
+		union all
+	select
+	  'test' as cohort,
+	  t2.passengerid, NULL as survived,
+	  t2.pclass, t2.name, t2.sex, t2.age,
+	  t2.sibsp, t2.parch, t2.ticket,
+	  t2.fare, t2.cabin, t2.embarked
+	from titanic_rawdata_test t2
+);
