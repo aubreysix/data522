@@ -1,0 +1,2 @@
+\copy titanic_rawdata_train from ‘/Users/apple/Desktop/titanic/train.csv’ delimiter ‘,’ csv HEADER;
+\copy titanic_rawdata_test from ‘/Users/apple/Desktop/titanic/test.csv’ delimiter ‘,’ csv HEADER;
