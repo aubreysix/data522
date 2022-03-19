@@ -1,0 +1,81 @@
+with titanic_survival_by_feature as
+(
+	select
+	  feature,
+	  feature_value,
+	  survival_rate,
+	  survived_passengers,
+	  total_passengers
+	from
+	(
+		select
+		  'pclass' as feature, 
+		  To_char(pclass) as feature_value,
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as survived_passengers, count(*) as total_passengers
+		from Train
+		group by 'pclass',pclass
+			union
+		select
+		  'sex', 
+		  sex, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from Train
+		group by 'sex', 
+		  sex
+			union
+		select
+		  'age', 
+		  To_char(age_bucket) as age_bucket, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from (select ntile(6) over (order by age) as age_bucket, tr.* from Train tr) ag
+		group by 'age',age_bucket
+			union
+		select
+		  'sibsp', 
+		  To_char(sibsp) as sibsp, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from Train
+		group by  'sibsp',sibsp
+			union
+		select
+		  'parch', 
+		  To_char(parch) as parch, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from Train
+		group by 'parch',parch
+			union
+		select
+		  'fare', 
+		  To_char(fare_bucket) as fare_bucket, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from (select ntile(6) over (order by fare) as fare_bucket, tr.* from Train tr) fr
+		group by 'fare',fare_bucket
+			union
+		select
+		  'cabin', 
+		  substr(cabin,1,1) as cabin, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from Train
+		group by 'cabin',cabin
+			union
+		select
+		  'embarked', 
+		  coalesce(embarked,'S') as embarked, 
+		  round(avg(survived),4) as survival_rate,
+		  sum(survived) as num_survived, count(*) as total_passengers
+		from Train
+		group by 'embarked',embarked
+	) t1
+)
+select *
+from titanic_survival_by_feature
+order by  feature,
+	  feature_value,
+	  survival_rate desc;
