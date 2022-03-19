@@ -1,0 +1,17 @@
+With A as(
+select
+  case when f1.survived = 1 then 'Survived' else 'Not Survived' end as survival_status, f1.*
+  from
+(
+	select
+	  count(*) over () as total_passengers,
+	  t1.*
+	from train t1
+) f1)
+select
+  survival_status,
+  round(1.0 * count(*) / max(total_passengers), 4) as survival_rate,
+  count(*) as num_of_passengers,
+  max(total_passengers) as total_passengers
+from A
+group by survival_status;
