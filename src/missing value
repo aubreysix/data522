@@ -1,0 +1,20 @@
+select
+  round(1.0 * sum(case when f1.passengerid is null then 1 else 0 end) / max(f1.total_passengers), 4) as passengerid,
+  round(1.0 * sum(case when f1.survived is null then 1 else 0 end) / max(f1.total_passengers), 4) as survived,
+  round(1.0 * sum(case when f1.pclass is null then 1 else 0 end) / max(f1.total_passengers), 4) as pclass,
+  round(1.0 * sum(case when f1.name is null then 1 else 0 end) / max(f1.total_passengers), 4) as name,
+  round(1.0 * sum(case when f1.sex is null then 1 else 0 end) / max(f1.total_passengers), 4) as sex,
+  round(1.0 * sum(case when f1.age is null then 1 else 0 end) / max(f1.total_passengers), 4) as age,
+  round(1.0 * sum(case when f1.sibsp is null then 1 else 0 end) / max(f1.total_passengers), 4) as sibsp,
+  round(1.0 * sum(case when f1.parch is null then 1 else 0 end) / max(f1.total_passengers), 4) as parch,
+  round(1.0 * sum(case when f1.ticket is null then 1 else 0 end) / max(f1.total_passengers), 4) as ticket,
+  round(1.0 * sum(case when f1.fare is null then 1 else 0 end) / max(f1.total_passengers), 4) as fare,
+  round(1.0 * sum(case when f1.cabin is null then 1 else 0 end) / max(f1.total_passengers), 4) as cabin,
+  round(1.0 * sum(case when f1.embarked is null then 1 else 0 end) / max(f1.total_passengers), 4) as embarked
+from
+(
+	select
+	  count(*) over () as total_passengers,
+	  t1.*
+	from train t1
+) f1;
