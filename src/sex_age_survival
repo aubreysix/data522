@@ -1,0 +1,46 @@
+select
+  t1.sex,
+  round(1.0 * sum(survived) / max(gender_cnt), 4) as survival_rate,
+  sum(survived) as survived_passengers,
+  max(gender_cnt) as total_passengers
+from
+(
+	select
+	  passengerid,
+	  count(*) over (partition by sex) as gender_cnt,
+	  sex,
+	  survived
+	from train
+) t1
+where t1.survived = 1
+group by t1.sex;
+
+
+
+
+
+-- survival based on sex and age 
+select
+  t1.sex,
+  t1.age_cohort,
+  min(age) as age_min,
+  max(age) as age_max,
+  count(*) as num_survived,
+  max(age_sex_cnt) as num_age_cohort,
+  round(1.0 * count(*) / max(age_sex_cnt), 4) as survival_rate
+from
+(
+	select
+	  passengerid,
+	  age,
+	  count(*) over (partition by sex, floor(1.0 * age / 10)) as age_sex_cnt,
+	  sex,
+	  floor(1.0 * age / 10) as age_cohort,
+	  survived
+	from train
+) t1
+where t1.survived = 1
+group by   t1.sex,
+  t1.age_cohort
+order by   t1.sex,
+  t1.age_cohort;
