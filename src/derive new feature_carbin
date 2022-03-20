@@ -1,0 +1,23 @@
+select *
+from
+(
+  select
+    pclass,
+    embarked,
+    cabin_level,
+    row_number() over (partition by pclass, embarked order by num_passengers desc) as cabin_rnk
+  from
+  (
+     select
+       pclass,
+       embarked,
+       cabin_level,
+       count(*) as num_passengers
+     from train_v2
+     where cabin_level is not null
+     group by pclass,
+       embarked,
+       cabin_level
+  ) cl
+) t3
+where t3.cabin_rnk = 1;
