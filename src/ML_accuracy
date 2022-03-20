@@ -1,0 +1,67 @@
+create table ml_features_v5 as
+(
+	select
+	  t1.survived,
+	  t1.pclass,
+	  t1.sex,
+	  t1.age,
+	  t1.age_bucket,
+	  t1.fare,
+	  t1.fare_bucket,
+	  t1.cabin_level,
+	  t1.embarked,
+	  t2.*
+	from train_v3 t1
+	     left join
+	     (
+	       select
+                 passengerid,
+                 case when sex = '0' and AGE_BUCKET in( '0','1','2','3','4','5','6') then '0'
+                      when sex = '0' and AGE_BUCKET in( '7') then '1'
+                      when sex = '1' and AGE_BUCKET in( '3','5','6') then '1'
+                      else '0'end as sex_age_survival
+	       from train_v3
+	     ) t2
+	       on t1.passengerid = t2.passengerid
+);
+
+select count(*) as cnt,'Total' as v1
+from ml_features_v1)
+
+union
+
+select count(*) as count_rt.'rt' as v1
+from ml_features_v2;
+
+select count_rt/total_cnt;
+
+select round(sum(case when SURVIVED=SEX_AGE_SURVIVAL then 1
+else 0 end)/count(*) *100 , 2)as accuracy, '>=80%' as survival_rate
+from ml_features_v5
+
+union
+
+select round(sum(case when SURVIVED=SEX_AGE_SURVIVAL then 1
+else 0 end)/count(*) *100 , 2)as accuracy, '>=70%' as survival_rate
+from ml_features_v4
+
+union
+
+select round(sum(case when SURVIVED=SEX_AGE_SURVIVAL then 1
+else 0 end)/count(*) *100 , 2)as accuracy, '>=85%' as survival_rate
+from ml_features_v3
+
+union
+
+select round(sum(case when SURVIVED=SEX_AGE_SURVIVAL then 1
+else 0 end)/count(*) *100 , 2)as accuracy, '>=65%' as survival_rate
+from ml_features_v2
+
+union
+
+select round(sum(case when SURVIVED=SEX_AGE_SURVIVAL then 1
+else 0 end)/count(*) *100 , 2)as accuracy, '>=75%' as survival_rate
+from ml_features_v1;
+
+select *
+from ml_features_v1;
