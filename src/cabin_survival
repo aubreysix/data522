@@ -1,0 +1,18 @@
+-- cabin level and pclass survival
+select
+  pclass,
+  cabin_level,
+  count(*) as num_passengers,
+  round(avg(survived),4) as survival_rate
+from train
+group by pclass,
+  cabin_level
+order by pclass,
+  cabin_level;
+
+-- embarked doesn't seem to be as strong as a feature to predict survival
+select
+  coalesce(embarked,'S') as embarked,
+  round(avg(survived),4) as survival_rate
+from train
+group by coalesce(embarked,'S') ;

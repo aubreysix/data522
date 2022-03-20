@@ -1,0 +1,61 @@
+-- distribution of fares and survival based on arbitray fare groupings
+select
+  fare_grouping,
+  count(*) as passenger_cnt,
+  count(case when sex = 'female' then passengerid else null end) as female_passenger_cnt,
+  count(case when sex = 'male' then passengerid else null end) as male_passenger_cnt,
+  min(fare) as fare_min,
+  max(fare) as fare_max,
+  round(avg(fare),2) as fare_mean,
+  round(stddev(fare),2) as fare_stddev,
+  round(avg(survived),4) as survival_rate,
+  round(avg(case when sex = 'female' then survived else null end),4) as female_survival_rate,
+  round(avg(case when sex = 'male' then survived else null end),4) as male_survival_rate,
+  round(round(avg(case when sex = 'female' then survived else null end),4) / round(avg(case when sex = 'male' then survived else null end),4), 2) as survival_ratio
+from
+(
+  select
+    passengerid,
+    pclass,
+    sex,
+    fare,
+    survived,
+    ntile(6) over (order by fare) as fare_grouping
+  from train
+) t1
+group by fare_grouping
+order by fare_grouping;
+
+-- this query shows that passenger_cnt per ticket does not always equal family_size_cnt from sibsp+parch+1
+select
+  ticket,
+  max(fare) as fare,
+  count(passengerid) as passenger_cnt,
+  max(sibsp + parch + 1) as family_size_cnt
+from train
+group by ticket
+having count(passengerid) != max(sibsp + parch + 1);
+
+-- calculate fare_per_passenger and average fare_per_passenger per class
+-- pclass is already grouping the fares into groups. Most likely redundant to have both features.
+select
+  pclass,
+  round(avg(fare_per_passenger),2) as fare_mean,
+  round(stddev(fare_per_passenger),2) as fare_stddev,
+  percentile_disc(0.5) within group (order by fare_per_passenger) as fare_median_disc,
+  min(fare_per_passenger) as fare_min,
+  max(fare_per_passenger) as fare_max
+from
+(
+  select
+    pclass,
+    ticket,
+    max(fare) as fare_total,
+    count(passengerid) as ticket_passenger_cnt, -- used as denominator b/c more reliable when count(passengerid) != max(sibsp + parch + 1)
+    max(sibsp + parch + 1) as family_size_cnt,
+    round(max(fare) / count(passengerid), 4) as fare_per_passenger
+  from train
+  group by pclass
+) t1
+group by pclass
+order by pclass;
