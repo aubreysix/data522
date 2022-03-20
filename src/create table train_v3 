@@ -1,0 +1,87 @@
+create table train_v3 as
+(
+select
+  t1.passengerid,
+  t1.survived,
+  t1.pclass,
+  t1.sex,
+  coalesce(t1.age, t2.age_mean) as age,
+  case when floor(1.0 * coalesce(t1.age, t2.age_mean) / 10) >= 7 then 7 else floor(1.0 * coalesce(t1.age, t2.age_mean) / 10) end as age_bucket,
+  coalesce(t1.fare, t4.fare_mean) as fare,
+  coalesce(t1.fare_per_passenger, t4.fare_mean) as fare_per_passenger,
+  case when floor(coalesce(t1.fare_per_passenger, t4.fare_mean) / 11) > 4 then 5 else floor(coalesce(t1.fare_per_passenger, t4.fare_mean) / 11) end as fare_bucket,
+  t1.ticket,
+  t1.sibsp,
+  t1.parch,
+  t1.cabin,
+  case when coalesce(t1.cabin_level, t3.cabin_level) = 'A' then 0
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'B' then 1
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'C' then 2
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'D' then 3
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'E' then 4
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'F' then 5
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'G' then 6
+       when coalesce(t1.cabin_level, t3.cabin_level) = 'T' then 7
+  end as cabin_level,
+  t1.embarked
+from train_v2 t1
+     left join
+     (
+        select
+          pclass,
+          sex,
+          round(avg(age),2) as age_mean,
+          round(stddev(age),2) as age_stddev,
+	  count(passengerid) as num_passengers
+        from train_v2
+	group by  pclass,
+          sex
+     ) t2
+       on t1.pclass = t2.pclass
+       and t1.sex = t2.sex
+     left join
+     (
+        select
+          pclass,
+          embarked,
+          cabin_level,
+          row_number() over (partition by pclass, embarked order by num_passengers desc) as cabin_rnk
+        from
+        (
+           select
+             pclass,
+             embarked,
+             cabin_level,
+             count(*) as num_passengers
+           from train_v2
+           where cabin_level is not null
+           group by pclass,
+             embarked,
+             cabin_level
+        ) cl
+      ) t3
+        on t1.pclass = t3.pclass
+        and t1.embarked = t3.embarked
+        and t3.cabin_rnk = 1
+      left join
+      (
+         select
+           pclass,
+           round(avg(fare_per_passenger),2) as fare_mean
+         from
+         (
+            select
+              pclass,
+              ticket,
+              round(max(fare) / count(passengerid), 4) as fare_per_passenger
+            from train
+            group by pclass,
+              ticket
+         ) t1
+         group by pclass
+       ) t4
+         on t1.pclass = t4.pclass
+);
+
+select * 
+from train_v3;
